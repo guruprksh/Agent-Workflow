@@ -753,6 +753,7 @@ export const DEMO_RUNS: RunTrace[] = [
   },
 ];
 
+export const AGENTS_CATALOG = REUSABLE_AGENTS;
 export const WORKFLOW_TEMPLATES = TEMPLATES;
 export const RUN_TRACES = DEMO_RUNS;
 export const MEMORY_ITEMS = MEMORY_RECORDS;

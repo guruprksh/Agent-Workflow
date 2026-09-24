@@ -109,6 +109,68 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     }
   };
 
+  // Touch support for mobile & tablet
+  const [touchDist, setTouchDist] = useState<number | null>(null);
+  const [initialTouchZoom, setInitialTouchZoom] = useState<number>(zoom);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsPanning(true);
+      setStartPan({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+    } else if (e.touches.length === 2) {
+      setIsPanning(false);
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setTouchDist(dist);
+      setInitialTouchZoom(zoom);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isPanning) {
+      const touch = e.touches[0];
+      setPan({
+        x: touch.clientX - startPan.x,
+        y: touch.clientY - startPan.y,
+      });
+    } else if (e.touches.length === 2 && touchDist !== null) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = currentDist / touchDist;
+      const newZoom = Math.min(Math.max(0.3, initialTouchZoom * ratio), 2);
+      setZoom(Number(newZoom.toFixed(2)));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsPanning(false);
+    setTouchDist(null);
+  };
+
+  // Fit all nodes to current viewport
+  const handleFitToScreen = useCallback(() => {
+    if (!containerRef.current || workflow.nodes.length === 0) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const minX = Math.min(...workflow.nodes.map((n) => n.position.x));
+    const maxX = Math.max(...workflow.nodes.map((n) => n.position.x + 300));
+    const minY = Math.min(...workflow.nodes.map((n) => n.position.y));
+    const maxY = Math.max(...workflow.nodes.map((n) => n.position.y + 160));
+    const graphWidth = maxX - minX;
+    const graphHeight = maxY - minY;
+    const scaleX = (rect.width - 60) / Math.max(graphWidth, 400);
+    const scaleY = (rect.height - 100) / Math.max(graphHeight, 400);
+    const newZoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.35), 1.2);
+    const newPanX = (rect.width - graphWidth * newZoom) / 2 - minX * newZoom;
+    const newPanY = (rect.height - graphHeight * newZoom) / 2 - minY * newZoom + 10;
+    setZoom(Number(newZoom.toFixed(2)));
+    setPan({ x: Math.round(newPanX), y: Math.round(newPanY) });
+  }, [workflow.nodes]);
+
   // Pan canvas logic
   const handleMouseDownCanvas = (e: React.MouseEvent) => {
     // If clicked on canvas background
@@ -558,22 +620,24 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0d11] overflow-hidden select-none">
       {/* Top Floating Canvas Toolbar */}
-      <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
+      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-30 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Workflow metadata & actions */}
-        <div className="flex items-center gap-2 pointer-events-auto bg-[#12151c]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-zinc-800 shadow-xl">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-zinc-100">{workflow.name}</span>
+        <div className="flex items-center gap-2 pointer-events-auto bg-[#12151c]/95 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-lg border border-zinc-800 shadow-xl max-w-full overflow-hidden">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span className="font-semibold text-xs sm:text-sm text-zinc-100 truncate max-w-[140px] sm:max-w-[220px]">
+                {workflow.name}
+              </span>
               <button
                 onClick={onOpenVersions}
-                className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors flex items-center gap-1"
+                className="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors flex items-center gap-1 shrink-0"
                 title="Manage Workflow Versions"
               >
                 <Layers className="w-3 h-3 text-indigo-400" />
-                {workflow.version}
+                <span>{workflow.version}</span>
               </button>
             </div>
-            <div className="text-[11px] text-zinc-400 flex items-center gap-2 mt-0.5">
+            <div className="hidden sm:flex text-[11px] text-zinc-400 items-center gap-2 mt-0.5">
               <span>{workflow.agentCount} Agents</span>
               <span>·</span>
               <span>{workflow.nodes.length} Nodes</span>
@@ -582,12 +646,12 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
             </div>
           </div>
 
-          <div className="h-5 w-px bg-zinc-800 mx-1" />
+          <div className="h-4 sm:h-5 w-px bg-zinc-800 mx-0.5 sm:mx-1 shrink-0" />
 
           {/* Validation Status Indicator */}
           <button
             onClick={onOpenValidation}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[11px] sm:text-xs font-mono transition-colors shrink-0 ${
               validationIssues.some((i) => i.severity === 'error')
                 ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60 hover:bg-rose-900/60'
                 : validationIssues.length > 0
@@ -598,36 +662,37 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
             {validationIssues.length === 0 ? (
               <>
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Ready to Run</span>
+                <span className="hidden sm:inline">Ready</span>
               </>
             ) : (
               <>
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>{validationIssues.length} issues</span>
+                <span>{validationIssues.length}</span>
               </>
             )}
           </button>
         </div>
 
         {/* Right: Primary Run & Action buttons */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto shrink-0 ml-auto sm:ml-0">
           {/* Workflow Copilot Trigger */}
           <button
             onClick={onOpenCopilot}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#12151c]/90 backdrop-blur-md rounded-lg border border-indigo-500/30 text-indigo-300 text-xs font-medium hover:bg-indigo-950/40 hover:border-indigo-400 transition-all shadow-lg"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#12151c]/95 backdrop-blur-md rounded-lg border border-indigo-500/30 text-indigo-300 text-xs font-medium hover:bg-indigo-950/40 hover:border-indigo-400 transition-all shadow-lg"
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Workflow Copilot</span>
+            <span className="hidden md:inline">Workflow Copilot</span>
+            <span className="md:hidden">Copilot</span>
           </button>
 
           {/* Add Node Button */}
           <div className="relative">
             <button
               onClick={() => setShowAddMenu(!showAddMenu)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#12151c]/90 backdrop-blur-md rounded-lg border border-zinc-800 text-zinc-200 text-xs font-medium hover:bg-zinc-800 hover:text-white transition-all shadow-lg"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[#12151c]/95 backdrop-blur-md rounded-lg border border-zinc-800 text-zinc-200 text-xs font-medium hover:bg-zinc-800 hover:text-white transition-all shadow-lg"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Node</span>
+              <span className="hidden sm:inline">Add Node</span>
             </button>
 
             {/* Dropdown Menu */}
@@ -692,7 +757,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           {/* Auto Layout */}
           <button
             onClick={handleAutoLayout}
-            className="p-2 bg-[#12151c]/90 backdrop-blur-md rounded-lg border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-lg"
+            className="p-2 bg-[#12151c]/95 backdrop-blur-md rounded-lg border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-lg"
             title="Auto-Align Layout"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -702,7 +767,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           <button
             onClick={onRunWorkflow}
             disabled={isRunning}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold shadow-lg transition-all ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold shadow-lg transition-all ${
               isRunning
                 ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed'
                 : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/25 active:scale-95'
@@ -711,25 +776,28 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
             {isRunning ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Executing...</span>
+                <span className="hidden sm:inline">Executing...</span>
               </>
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Run Workflow</span>
+                <span>Run</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Interactive Main Canvas Area */}
+      {/* Interactive Main Canvas Area with Touch Gestures */}
       <div
         ref={containerRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing canvas-grid relative overflow-hidden"
+        className="w-full h-full cursor-grab active:cursor-grabbing canvas-grid relative overflow-hidden touch-none"
         onMouseDown={handleMouseDownCanvas}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onWheel={(e) => {
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -884,12 +952,21 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
+          <div className="w-px h-4 bg-zinc-800 my-auto" />
+          <button
+            onClick={handleFitToScreen}
+            className="p-1.5 text-zinc-400 hover:text-white rounded transition-colors flex items-center gap-1 text-[11px] font-mono px-2"
+            title="Fit All Nodes into Screen"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Fit</span>
+          </button>
         </div>
       </div>
 
-      {/* Bottom Right Minimap */}
+      {/* Bottom Right Minimap (Desktop only for clutter-free mobile touch) */}
       {showMinimap && (
-        <div className="absolute bottom-4 right-4 z-30 w-44 h-32 bg-[#12151c]/90 backdrop-blur-md rounded-lg border border-zinc-800 shadow-2xl p-1.5 overflow-hidden">
+        <div className="hidden md:block absolute bottom-4 right-4 z-30 w-44 h-32 bg-[#12151c]/90 backdrop-blur-md rounded-lg border border-zinc-800 shadow-2xl p-1.5 overflow-hidden">
           <div className="w-full h-full relative bg-[#090b0e] rounded border border-zinc-900 overflow-hidden">
             {/* Miniature Node dots */}
             {workflow.nodes.map((node) => {

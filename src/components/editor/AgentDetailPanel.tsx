@@ -73,8 +73,15 @@ export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({
   };
 
   return (
-    <div className="w-96 h-full bg-[#11141b] border-l border-zinc-800 flex flex-col z-40 shadow-2xl overflow-hidden">
-      {/* Header */}
+    <>
+      {/* Mobile Backdrop on smaller viewports */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden"
+      />
+
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 md:w-[420px] lg:relative lg:w-96 h-full bg-[#11141b] border-l border-zinc-800 flex flex-col z-50 shadow-2xl overflow-hidden animate-in slide-in-from-right duration-200">
+        {/* Header */}
       <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-[#141721]">
         <div className="flex items-center gap-2 min-w-0">
           <div className="p-1.5 rounded-md bg-indigo-950/60 border border-indigo-500/30 text-indigo-400">
@@ -566,5 +573,6 @@ export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({
         </div>
       )}
     </div>
+    </>
   );
 };

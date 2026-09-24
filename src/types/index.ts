@@ -308,3 +308,82 @@ export interface ValidationIssue {
   message: string;
   recommendation: string;
 }
+
+// Backtesting Agent Types
+export type BacktestSuiteId =
+  | 'canvas_dag'
+  | 'execution_engine'
+  | 'responsive_screens'
+  | 'copilot_generator'
+  | 'navigation_views'
+  | 'stress_benchmark';
+
+export interface BacktestAssertion {
+  name: string;
+  passed: boolean;
+  details?: string;
+}
+
+export interface BacktestTestCase {
+  id: string;
+  suite: BacktestSuiteId;
+  name: string;
+  description: string;
+  status: 'idle' | 'running' | 'passed' | 'failed' | 'warning';
+  durationMs: number;
+  assertions: BacktestAssertion[];
+  error?: string;
+  diagnostics?: Record<string, any>;
+}
+
+export interface BacktestAgentLog {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'agent' | 'warn' | 'error' | 'success';
+  message: string;
+  data?: any;
+}
+
+export interface BacktestRecommendation {
+  id: string;
+  type: 'perf' | 'responsive' | 'ux' | 'security' | 'dag';
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  autoFixable: boolean;
+  actionPayload?: any;
+}
+
+export interface BacktestRunSummary {
+  id: string;
+  timestamp: string;
+  totalTests: number;
+  passed: number;
+  failed: number;
+  warnings: number;
+  durationMs: number;
+  screenHealthScore: number; // 0-100
+  overallStatus: 'idle' | 'running' | 'passed' | 'failed';
+  suites: {
+    id: BacktestSuiteId;
+    name: string;
+    total: number;
+    passed: number;
+    failed: number;
+  }[];
+  cases: BacktestTestCase[];
+  logs: BacktestAgentLog[];
+  recommendations: BacktestRecommendation[];
+}
+
+export type SimulatedDeviceType = 'responsive' | 'mobile' | 'tablet' | 'laptop' | 'desktop';
+
+export interface SimulatedDeviceSpec {
+  id: SimulatedDeviceType;
+  name: string;
+  width: number;
+  height: number;
+  category: 'mobile' | 'tablet' | 'desktop';
+  dpr: number;
+  touchEnabled: boolean;
+}

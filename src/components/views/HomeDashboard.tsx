@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Cpu,
   Plus,
+  ShieldCheck,
 } from 'lucide-react';
 import { Workflow } from '../../types';
 
@@ -20,6 +21,7 @@ interface HomeDashboardProps {
   onOpenGeneratorWithPrompt: (prompt: string) => void;
   onNavigateTab: (tab: string) => void;
   onRunWorkflowNow: (wf: Workflow) => void;
+  onOpenBacktester?: () => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -28,6 +30,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onOpenGeneratorWithPrompt,
   onNavigateTab,
   onRunWorkflowNow,
+  onOpenBacktester,
 }) => {
   const [promptInput, setPromptInput] = useState('');
 
@@ -46,18 +49,29 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   };
 
   return (
-    <div className="flex-1 h-screen overflow-y-auto bg-[#0b0d11] p-8 space-y-10">
+    <div className="flex-1 h-screen overflow-y-auto bg-[#0b0d11] p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-10">
       {/* Central Hero Input Card */}
-      <div className="max-w-4xl mx-auto pt-6 space-y-6">
+      <div className="max-w-4xl mx-auto pt-2 sm:pt-6 space-y-4 sm:space-y-6">
         <div className="space-y-2 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/50 border border-indigo-500/30 text-indigo-300 text-xs font-mono">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Autonomous Multi-Agent Orchestration</span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/50 border border-indigo-500/30 text-indigo-300 text-xs font-mono">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Autonomous Multi-Agent Orchestration</span>
+            </div>
+            {onOpenBacktester && (
+              <button
+                onClick={onOpenBacktester}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-mono hover:bg-emerald-900/40 transition-colors"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Sentinel QA Agent Active</span>
+              </button>
+            )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white px-2">
             What do you want your AI team to do?
           </h1>
-          <p className="text-sm text-zinc-400 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto px-2">
             Describe the job in plain English. AgentFlow automatically designs the team, connects tools, sets up human approval checkpoints, and prepares the visual workflow.
           </p>
         </div>
@@ -69,33 +83,33 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             value={promptInput}
             onChange={(e) => setPromptInput(e.target.value)}
             placeholder="e.g. Monitor new research papers about composite materials, identify relevant papers, summarize them and add them to my research library..."
-            className="w-full bg-transparent px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none resize-none leading-relaxed"
+            className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none resize-none leading-relaxed"
           />
 
-          <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between px-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] text-zinc-400">
-              <span className="font-mono text-zinc-500">Try:</span>
+          <div className="pt-2 border-t border-zinc-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 px-1 sm:px-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] text-zinc-400 pb-1 sm:pb-0 scrollbar-none">
+              <span className="font-mono text-zinc-500 shrink-0">Try:</span>
               <button
                 onClick={() => setPromptInput(samplePrompts[0])}
-                className="hover:text-indigo-300 truncate max-w-xs transition-colors"
+                className="hover:text-indigo-300 truncate max-w-[140px] sm:max-w-xs transition-colors shrink-0"
               >
-                Research paper monitor
+                Research papers
               </button>
               <span>·</span>
               <button
                 onClick={() => setPromptInput(samplePrompts[1])}
-                className="hover:text-indigo-300 truncate max-w-xs transition-colors"
+                className="hover:text-indigo-300 truncate max-w-[140px] sm:max-w-xs transition-colors shrink-0"
               >
-                Lead qualification
+                Lead scoring
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2 shrink-0">
               <button
                 onClick={() => onNavigateTab('templates')}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
               >
-                Start from Template
+                Templates
               </button>
               <button
                 onClick={handleBuild}
