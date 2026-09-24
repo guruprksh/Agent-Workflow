@@ -4,6 +4,7 @@ import {
   ToolIntegration,
   KnowledgeBase,
   MemoryItem,
+  MemoryStore,
   Template,
   ScheduleItem,
   RunTrace,
