@@ -202,8 +202,19 @@ export interface KnowledgeBase {
   }>;
 }
 
+export interface MemoryStore {
+  id: string;
+  name: string;
+  type: string;
+  entryCount: number;
+  sizeKb: number;
+  entries: Record<string, any>;
+}
+
 export interface MemoryItem {
   id: string;
+  name?: string;
+  type?: string;
   scope: 'workflow' | 'agent' | 'workspace';
   targetId?: string; // workflowId, agentName, or 'workspace'
   namespace?: string;

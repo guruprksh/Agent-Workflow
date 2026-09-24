@@ -35,7 +35,7 @@ export const IntegrationsView: React.FC = () => {
 
   const toggleConnection = (id: string) => {
     setTools((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isConnected: !t.isConnected } : t))
+      prev.map((t) => (t.id === id ? { ...t, connected: !t.connected, isConnected: !t.connected } : t))
     );
   };
 

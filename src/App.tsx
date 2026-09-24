@@ -13,7 +13,7 @@ import { IntegrationsView } from './components/views/IntegrationsView';
 import { SchedulesView } from './components/views/SchedulesView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 import { SettingsView } from './components/views/SettingsView';
-import { LandingPage } from './components/views/LandingPage';
+import { LandingPageView as LandingPage } from './components/views/LandingPageView';
 import { WorkflowGeneratorModal } from './components/common/WorkflowGeneratorModal';
 import { CommandPalette } from './components/common/CommandPalette';
 import { RunMonitorModal } from './components/editor/RunMonitorModal';
