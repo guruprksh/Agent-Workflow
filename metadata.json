@@ -1,0 +1,6 @@
+{
+  "name": "AgentFlow",
+  "description": "Visual AI agent workflow builder that turns natural language task descriptions into collaborative multi-agent teams with tools, human oversight, and live execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
